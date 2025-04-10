@@ -1,10 +1,13 @@
 #!/bin/bash
 
-echo "Running pre-start scripts..."
+echo "📦 Extracting PDFs..."
+unzip -o pdfs/Insurance\ PDFs.zip -d pdfs/
 
-# Run vector prep
+echo "🔍 Running data processing..."
 python3 data_processing.py
+
+echo "🧠 Building vector database..."
 python3 vector_db.py
 
-echo "Starting Flask app..."
+echo "🚀 Starting Flask app..."
 python3 app.py
