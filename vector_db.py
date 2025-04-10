@@ -19,18 +19,13 @@ def create_vector_db():
         persist_directory="./chroma_db"
     )
     docs = vector_db.get()['documents']
-    print("Total documents stored:", len(docs))
+    print("✅ Total documents stored:", len(docs))
     vector_db.persist()
     print("✅ Vector database created successfully!")
     return vector_db
 
 if __name__ == "__main__":
-    os.system('clear')
-    print("Starting vector database creation...")
     try:
         create_vector_db()
     except Exception as e:
         print(f"Error: {str(e)}")
-        print("\nTroubleshooting:")
-        print("1. Run: pip install numpy==1.26.4 unstructured")
-        print("2. Reduce document count if memory issues persist")

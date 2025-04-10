@@ -1,4 +1,3 @@
-# data_processing.py
 import os
 import tempfile
 from bs4 import BeautifulSoup
@@ -43,7 +42,7 @@ def scrape_angelone_support():
                     all_docs.extend(docs)
                     print(f"✅ Scraped: {url}")
                 except Exception as e:
-                    print(f"❌ Failed to scrape {url}: {e}")
+                    print(f"⚠️ Failed to scrape {url}: {e}")
             browser.close()
             print(f"📄 Total scraped web documents: {len(all_docs)}")
             return all_docs
@@ -65,19 +64,20 @@ def load_documents(directory):
                 try:
                     loader = loaders[ext](filepath)
                     docs.extend(loader.load())
-                    print(f"✅ Successfully loaded: {filepath}")
+                    print(f"✅ Loaded: {filepath}")
                 except Exception as e:
-                    print(f"❌ Error loading {filepath}: {e}")
+                    print(f"⚠️ Error loading {filepath}: {e}")
             else:
-                print(f"⚠️ Skipping unsupported file type: {filename}")
+                print(f"⛔ Skipping unsupported file: {filename}")
     return docs
 
 def process_documents():
-    print("📡 Scraping AngelOne support website...")
+    print("📡 Scraping AngelOne support site...")
     web_docs = scrape_angelone_support()
-    print("📂 Loading local documents from pdfs/ directory...")
+    print("📂 Loading local documents from pdfs/ ...")
     local_docs = load_documents("pdfs")
-    print(f"📄 Total local docs loaded: {len(local_docs)}")
+    print(f"📄 Local docs loaded: {len(local_docs)}")
+
     all_docs = web_docs + local_docs
     print("✂️ Splitting documents into chunks...")
     text_splitter = RecursiveCharacterTextSplitter(
@@ -86,14 +86,5 @@ def process_documents():
         separators=["\n\n", "\n", " ", ""]
     )
     splits = text_splitter.split_documents(all_docs)
-    print(f"📑 Processed {len(splits)} document chunks")
-    print("📦 Saving documents to Chroma vector store...")
-    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2", model_kwargs={'device': 'cpu'})
-    vectorstore = Chroma.from_documents(
-        documents=splits,
-        embedding=embeddings,
-        persist_directory="./chroma_db"
-    )
-    vectorstore.persist() 
-    print("✅ Chroma DB persisted successfully!")
+    print(f"📚 Created {len(splits)} document chunks")
     return splits
