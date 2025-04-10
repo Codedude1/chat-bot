@@ -15,6 +15,9 @@ unzip -o Insurance_PDFs.zip -d pdfs
 echo "🧹 Cleaning unsupported files..."
 find pdfs/ -type f ! -iname "*.pdf" ! -iname "*.docx" -delete
 
+echo "🧠 Processing PDFs into chunks..."
+python3 data_processing.py || echo "❌ Data processing failed"
+
 echo "⚙️ Creating Vector DB..."
 python3 vector_db.py || echo "❌ Vector DB creation failed"
 
