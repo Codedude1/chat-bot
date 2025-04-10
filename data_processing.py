@@ -1,3 +1,4 @@
+# data_processing.py
 import os
 import tempfile
 from bs4 import BeautifulSoup
@@ -20,7 +21,6 @@ def scrape_angelone_support():
             page = browser.new_page()
             page.goto(base_url, timeout=15000)
             page.wait_for_load_state("networkidle")
-            
             page.wait_for_timeout(5000)
             links = page.query_selector_all('a[href^="/support/"]')
             full_links = list(set(
@@ -57,18 +57,19 @@ def load_documents(directory):
         ".pdf": PyPDFLoader,
         ".docx": UnstructuredWordDocumentLoader,
     }
-    for filename in os.listdir(directory):
-        filepath = os.path.join(directory, filename)
-        ext = os.path.splitext(filename)[1].lower()
-        if ext in loaders:
-            try:
-                loader = loaders[ext](filepath)
-                docs.extend(loader.load())
-                print(f"✅ Successfully loaded: {filename}")
-            except Exception as e:
-                print(f"❌ Error loading {filename}: {e}")
-        else:
-            print(f"⚠️ Skipping unsupported file type: {filename}")
+    for root, _, files in os.walk(directory):
+        for filename in files:
+            filepath = os.path.join(root, filename)
+            ext = os.path.splitext(filename)[1].lower()
+            if ext in loaders:
+                try:
+                    loader = loaders[ext](filepath)
+                    docs.extend(loader.load())
+                    print(f"✅ Successfully loaded: {filepath}")
+                except Exception as e:
+                    print(f"❌ Error loading {filepath}: {e}")
+            else:
+                print(f"⚠️ Skipping unsupported file type: {filename}")
     return docs
 
 def process_documents():
@@ -76,12 +77,13 @@ def process_documents():
     web_docs = scrape_angelone_support()
     print("📂 Loading local documents from pdfs/ directory...")
     local_docs = load_documents("pdfs")
+    print(f"📄 Total local docs loaded: {len(local_docs)}")
     all_docs = web_docs + local_docs
     print("✂️ Splitting documents into chunks...")
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=300,
         chunk_overlap=50,
-        separators=["\n\n", "\n", " ", ""],
+        separators=["\n\n", "\n", " ", ""]
     )
     splits = text_splitter.split_documents(all_docs)
     print(f"📑 Processed {len(splits)} document chunks")
@@ -95,6 +97,3 @@ def process_documents():
     vectorstore.persist() 
     print("✅ Chroma DB persisted successfully!")
     return splits
-
-if __name__ == "__main__":
-    process_documents()
