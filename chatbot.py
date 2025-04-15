@@ -25,11 +25,12 @@ class AngelOneChatbot:
         # LLM from Together.ai
         self.llm = Together(
             model="mistralai/Mistral-7B-Instruct-v0.1",
-            temperature=0.1,
+            temperature=0.2,
             max_tokens=512,
             together_api_key=os.getenv("TOGETHER_API_KEY")
         )
 
+        # Stricter prompt
         self.prompt_template = PromptTemplate(
             input_variables=["context", "question"],
             template="""
@@ -40,7 +41,8 @@ Context:
 {context}
 
 Question: {question}
-Helpful Answer:"""
+
+Strict Answer:"""
         )
 
         self.qa_chain = RetrievalQA.from_chain_type(
@@ -56,6 +58,11 @@ Helpful Answer:"""
             result = self.qa_chain.invoke({"query": question})
             source_docs = result.get("source_documents", [])
             answer = result.get("result", "").strip()
+
+            # Log retrieved docs
+            for i, doc in enumerate(source_docs):
+                print(f"\n🔍 Retrieved [Doc {i+1}]:\n{doc.page_content[:300]}\n")
+
             if not source_docs or "i don't know" in answer.lower():
                 return "I Don't know"
             return answer
